@@ -8,7 +8,7 @@
        los QR y las pegatinas NFC antes de montar todo lo demás.
    ===================================================================== */
 const CONFIG = {
-  API_URL: 'PRUEBA',
+  API_URL: 'https://script.google.com/macros/s/AKfycbzHHJPI6Nz0TV7zUZfQEDp41H-MROvDnY-wiOzK3O49EucSZhEeW2q_gfGISjb3fyC79A/exec',
   SEGUNDOS_VALIDEZ_PANTALLA: 120,   // pasado este tiempo la pantalla verde/roja se pone gris
   ZONA_HORARIA: 'Europe/Madrid',
 };
