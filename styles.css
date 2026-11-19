@@ -1,16 +1,20 @@
 /* AESA Prep Academy · control de entradas y salidas — estilos de la app del alumno */
+/* Colores del escudo de AESA Prep Academy */
 :root {
-  --navy: #14243a;
-  --navy-2: #1f3a5f;
-  --verde: #0b8a47;
-  --verde-2: #076435;
+  --navy: #0a1036;      /* marino del contorno del escudo */
+  --navy-2: #2c43c9;    /* azul del escudo, más oscuro para fondos */
+  --azul: #516efa;      /* azul del escudo */
+  --azul-boton: #3653e8;/* azul del escudo con contraste suficiente para texto blanco */
+  --dorado: #dbb355;    /* aro dorado del escudo */
+  --verde: #2f8a10;     /* verde del escudo (algo más oscuro para leer bien en blanco) */
+  --verde-2: #236b0b;
   --rojo: #c62828;
   --rojo-2: #8e1616;
   --gris: #4b525c;
   --gris-2: #30353c;
-  --ambar: #ffc107;
-  --texto: #1b2430;
-  --suave: #5f6b7a;
+  --ambar: #dbb355;
+  --texto: #141a3a;
+  --suave: #5b6382;
   --radio: 18px;
 }
 
@@ -38,10 +42,16 @@ body {
   text-align: center;
   overflow: hidden;
 }
-.oscura { background: radial-gradient(120% 80% at 50% 0%, var(--navy-2), var(--navy)); }
+.oscura { background: radial-gradient(120% 80% at 50% 0%, var(--navy-2), var(--navy) 70%); }
 
-.marca { font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 13px; opacity: .85; margin-bottom: 22px; }
-.marca-oscura { color: var(--navy-2); opacity: 1; margin-bottom: 14px; }
+.marca { font-weight: 700; letter-spacing: .08em; text-transform: uppercase; font-size: 13px; opacity: .9; margin-bottom: 22px; color: var(--dorado); }
+.marca-oscura { color: var(--navy-2); opacity: 1; margin-bottom: 14px; text-align: center; }
+
+/* Escudo: siempre sobre un círculo blanco con aro dorado, para que se lea en cualquier fondo */
+.escudo { display: block; border-radius: 50%; background: #fff; padding: 3px; box-shadow: 0 0 0 3px var(--dorado), 0 10px 30px rgba(0, 0, 0, .3); }
+.escudo-grande { width: 112px; height: 112px; margin: 0 auto 18px; }
+.escudo-tarjeta { width: 76px; height: 76px; margin: -66px auto 10px; }
+.escudo-mini { position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 14px; width: 44px; height: 44px; z-index: 2; box-shadow: 0 0 0 2px var(--dorado); }
 
 /* ---------- Cargando ---------- */
 .spinner {
@@ -56,7 +66,9 @@ body {
   width: 100%; max-width: 420px;
   background: #fff; color: var(--texto);
   border-radius: var(--radio);
+  border-top: 5px solid var(--dorado);
   padding: 28px 22px 22px;
+  margin-top: 56px;
   text-align: left;
   box-shadow: 0 20px 50px rgba(0, 0, 0, .35);
 }
@@ -67,13 +79,13 @@ input {
   width: 100%; font-size: 18px; padding: 14px 14px;
   border: 2px solid #d5dbe3; border-radius: 12px; outline: none; color: var(--texto); background: #fff;
 }
-input:focus { border-color: var(--navy-2); }
+input:focus { border-color: var(--azul); }
 input.codigo { font-size: 30px; letter-spacing: .35em; text-align: center; font-variant-numeric: tabular-nums; }
 .btn {
   display: block; width: 100%; margin-top: 14px;
   font-size: 18px; font-weight: 700; padding: 15px;
   border: 0; border-radius: 12px; cursor: pointer;
-  background: var(--navy-2); color: #fff;
+  background: var(--azul-boton); color: #fff;
 }
 .btn:disabled { opacity: .6; cursor: progress; }
 .btn-claro { background: #fff; color: var(--navy); max-width: 320px; margin-top: 24px; }
@@ -81,7 +93,7 @@ input.codigo { font-size: 30px; letter-spacing: .35em; text-align: center; font-
   background: none; border: 0; padding: 6px 2px; font: inherit; color: inherit;
   text-decoration: underline; cursor: pointer;
 }
-.tarjeta .enlace { display: block; margin: 12px auto 0; color: var(--navy-2); font-size: 15px; }
+.tarjeta .enlace { display: block; margin: 12px auto 0; color: var(--azul-boton); font-size: 15px; }
 .aviso { background: #fff6dd; border: 1px solid #f0d58a; color: #6b5300; padding: 10px 12px; border-radius: 10px; margin: 0 0 14px; line-height: 1.4; }
 .error { background: #fdecec; border: 1px solid #f3b7b7; color: #8e1616; padding: 10px 12px; border-radius: 10px; margin: 14px 0 0; line-height: 1.4; }
 .nota { font-size: 13px; color: var(--suave); margin: 18px 0 0; text-align: center; }
@@ -125,7 +137,7 @@ input.codigo { font-size: 30px; letter-spacing: .35em; text-align: center; font-
 .res-mensaje { font-size: 19px; line-height: 1.4; margin: 0 0 12px; max-width: 420px; font-weight: 500; }
 .chip {
   display: inline-block; margin: 0 0 12px; padding: 7px 14px; border-radius: 999px;
-  background: var(--ambar); color: #3a2b00; font-weight: 700; font-size: 16px;
+  background: var(--dorado); color: #2b1f00; font-weight: 700; font-size: 16px;
 }
 
 .foto-marco { position: relative; width: 132px; height: 132px; margin: 8px 0 10px; }
