@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Carteles QR · AESA Prep</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #1b2430; background: #eef1f5; }
+    .panel { max-width: 760px; margin: 0 auto; padding: 24px 16px; }
+    h1 { margin: 0 0 6px; }
+    label { display: block; font-weight: 600; margin: 16px 0 6px; }
+    input, textarea { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border: 1px solid #c8d0da; border-radius: 8px; }
+    textarea { min-height: 90px; }
+    .ayuda { color: #5f6b7a; font-size: 14px; margin: 4px 0 0; }
+    button { margin-top: 18px; font: inherit; font-weight: 700; padding: 12px 20px; border: 0; border-radius: 8px; background: #1f3a5f; color: #fff; cursor: pointer; }
+    .cartel {
+      width: 190mm; height: 270mm; margin: 20px auto; background: #fff; box-sizing: border-box;
+      padding: 18mm 14mm; display: flex; flex-direction: column; align-items: center; text-align: center;
+      border: 1px solid #ccd; page-break-after: always; break-after: page;
+    }
+    .cartel .centro { font-size: 15pt; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: #1f3a5f; }
+    .cartel h2 { font-size: 34pt; margin: 6mm 0 2mm; }
+    .cartel .puerta { font-size: 20pt; color: #444; margin-bottom: 8mm; }
+    .cartel .qr { width: 110mm; height: 110mm; }
+    .cartel .qr img, .cartel .qr canvas { width: 100% !important; height: 100% !important; }
+    .cartel .pasos { font-size: 15pt; margin-top: 8mm; line-height: 1.5; }
+    .cartel .nfc { margin-top: 8mm; width: 34mm; height: 34mm; border: 2px dashed #99a; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #778; font-size: 10pt; }
+    .cartel .url { margin-top: auto; font-size: 9pt; color: #889; word-break: break-all; }
+    @media print {
+      body { background: #fff; }
+      .panel { display: none; }
+      .cartel { margin: 0; border: 0; }
+      @page { size: A4; margin: 10mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Carteles con QR para las puertas</h1>
+    <p class="ayuda">Esta página genera los carteles en tu propio navegador. Después pulsa “Imprimir” (o Guardar como PDF).</p>
+
+    <label for="base">Dirección de la app (tu GitHub Pages)</label>
+    <input id="base">
+    <p class="ayuda">Ejemplo: https://tu-usuario.github.io/control-accesos/</p>
+
+    <label for="puertas">Puertas (una por línea, con el formato id=Nombre visible)</label>
+    <textarea id="puertas">principal=Puerta principal</textarea>
+    <p class="ayuda">Deben coincidir con la fila <b>puertas</b> de la pestaña Config.</p>
+
+    <button id="generar" type="button">Generar carteles</button>
+    <button id="imprimir" type="button">Imprimir</button>
+  </div>
+  <div id="carteles"></div>
+
+  <script>
+    const base = document.getElementById('base');
+    base.value = location.href.replace(/carteles\.html.*$/, '');
+
+    function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+    function generar() {
+      const cont = document.getElementById('carteles');
+      cont.innerHTML = '';
+      let b = base.value.trim();
+      if (!/\/$/.test(b)) b += '/';
+      document.getElementById('puertas').value.split(/\n|,/).map((l) => l.trim()).filter(Boolean).forEach((l) => {
+        const [idCrudo, nombreCrudo] = l.split('=');
+        const id = idCrudo.trim().toLowerCase().replace(/\s+/g, '-');
+        const nombre = (nombreCrudo || id).trim();
+        const url = b + '?puerta=' + encodeURIComponent(id);
+        const div = document.createElement('div');
+        div.className = 'cartel';
+        div.innerHTML =
+          '<div class="centro">AESA Prep Academy</div>' +
+          '<h2>Entradas y salidas</h2>' +
+          '<div class="puerta">' + esc(nombre) + '</div>' +
+          '<div class="qr"></div>' +
+          '<div class="pasos">Escanea el código con la cámara<br>o acerca el móvil a la pegatina NFC</div>' +
+          '<div class="nfc">Pegatina NFC</div>' +
+          '<div class="url">' + esc(url) + '</div>';
+        cont.appendChild(div);
+        new QRCode(div.querySelector('.qr'), { text: url, width: 800, height: 800, correctLevel: QRCode.CorrectLevel.M });
+      });
+    }
+    document.getElementById('generar').addEventListener('click', generar);
+    document.getElementById('imprimir').addEventListener('click', () => window.print());
+    generar();
+  </script>
+</body>
+</html>
