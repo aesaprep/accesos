@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>Carteles QR · AESA Prep</title>
+  <title>QR posters · AESA Prep</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: #1b2430; background: #eef1f5; }
@@ -41,19 +41,19 @@
 </head>
 <body>
   <div class="panel">
-    <h1>Carteles con QR para las puertas</h1>
-    <p class="ayuda">Esta página genera los carteles en tu propio navegador. Después pulsa “Imprimir” (o Guardar como PDF).</p>
+    <h1>QR posters for the doors</h1>
+    <p class="ayuda">This page creates the posters in your own browser. Then press “Print” (or Save as PDF).</p>
 
-    <label for="base">Dirección de la app (tu GitHub Pages)</label>
+    <label for="base">App address (your GitHub Pages)</label>
     <input id="base">
-    <p class="ayuda">Ejemplo: https://tu-usuario.github.io/control-accesos/</p>
+    <p class="ayuda">Example: https://aesaprep.github.io/accesos/</p>
 
-    <label for="puertas">Puertas (una por línea, con el formato id=Nombre visible)</label>
-    <textarea id="puertas">principal=Puerta principal</textarea>
-    <p class="ayuda">Deben coincidir con la fila <b>puertas</b> de la pestaña Config.</p>
+    <label for="puertas">Doors (one per line, in the format id=Visible name)</label>
+    <textarea id="puertas">principal=Main door</textarea>
+    <p class="ayuda">They must match the <b>puertas</b> row in the Config tab.</p>
 
-    <button id="generar" type="button">Generar carteles</button>
-    <button id="imprimir" type="button">Imprimir</button>
+    <button id="generar" type="button">Create posters</button>
+    <button id="imprimir" type="button">Print</button>
   </div>
   <div id="carteles"></div>
 
@@ -79,11 +79,11 @@
           '<img class="escudo" src="logo.png" alt="">' +
           '<div class="centro">AESA Prep Academy</div>' +
           '<div class="linea"></div>' +
-          '<h2>Entradas y salidas</h2>' +
+          '<h2>Entry &amp; exit</h2>' +
           '<div class="puerta">' + esc(nombre) + '</div>' +
           '<div class="qr"></div>' +
-          '<div class="pasos">Escanea el código con la cámara<br>o acerca el móvil a la pegatina NFC</div>' +
-          '<div class="nfc">Pegatina NFC</div>' +
+          '<div class="pasos">Scan the code with your camera<br>or hold your phone to the NFC sticker</div>' +
+          '<div class="nfc">NFC sticker</div>' +
           '<div class="url">' + esc(url) + '</div>';
         cont.appendChild(div);
         new QRCode(div.querySelector('.qr'), { text: url, width: 800, height: 800, correctLevel: QRCode.CorrectLevel.M });

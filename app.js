@@ -267,8 +267,7 @@ function elegirIdioma() {
   if (TEXTOS[q]) return q;
   const guardado = almacen.get('idioma');
   if (guardado && TEXTOS[guardado]) return guardado;
-  const nav = (navigator.language || 'es').slice(0, 2).toLowerCase();
-  return TEXTOS[nav] ? nav : 'es';
+  return 'en';   // English by default (international school); students can switch language at the bottom
 }
 
 function t(clave, datos) {
