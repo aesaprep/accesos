@@ -80,6 +80,12 @@ const TEXTOS = {
     err_ERROR_SERVIDOR: 'Error del servidor. Inténtalo otra vez o avisa en secretaría.',
     err_CONFIG: 'La aplicación no está bien configurada. Avisa en secretaría.',
     err_SIN_ALMACEN: 'Tu navegador no deja guardar datos (¿modo incógnito?). Abre el enlace en una ventana normal del navegador.',
+    pronto_titulo: 'Aún es pronto',
+    pronto: 'Puedes fichar la entrada a partir de las {desde}.',
+    fueraTitulo: 'No estás en el colegio',
+    err_FUERA_DEL_CENTRO: 'Solo se puede fichar desde el colegio. Si estás en la puerta y te sale este aviso, espera unos segundos y pulsa «Reintentar», o ve a secretaría.',
+    ubicacionTitulo: 'Activa la ubicación',
+    err_UBICACION_NECESARIA: 'Para fichar hay que permitir la ubicación. iPhone: Ajustes → Privacidad y seguridad → Localización → activada, y en Safari (o Chrome) «Al usar la app». Android: toca el candado junto a la dirección web → Permisos → Ubicación → Permitir. Después pulsa «Reintentar».',
   },
   ca: {
     locale: 'ca-ES',
@@ -143,6 +149,12 @@ const TEXTOS = {
     err_ERROR_SERVIDOR: 'Error del servidor. Torna-ho a provar o avisa a secretaria.',
     err_CONFIG: 'L’aplicació no està ben configurada. Avisa a secretaria.',
     err_SIN_ALMACEN: 'El navegador no permet desar dades (mode d’incògnit?). Obre l’enllaç en una finestra normal.',
+    pronto_titulo: 'Encara és aviat',
+    pronto: 'Pots fitxar l’entrada a partir de les {desde}.',
+    fueraTitulo: 'No ets a l’escola',
+    err_FUERA_DEL_CENTRO: 'Només es pot fitxar des de l’escola. Si ets a la porta i et surt aquest avís, espera uns segons i prem «Torna-ho a provar», o ves a secretaria.',
+    ubicacionTitulo: 'Activa la ubicació',
+    err_UBICACION_NECESARIA: 'Per fitxar cal permetre la ubicació. iPhone: Configuració → Privacitat i seguretat → Localització → activada, i a Safari (o Chrome) «Mentre s’usa». Android: toca el cadenat al costat de l’adreça web → Permisos → Ubicació → Permetre. Després prem «Torna-ho a provar».',
   },
   en: {
     locale: 'en-GB',
@@ -206,6 +218,12 @@ const TEXTOS = {
     err_ERROR_SERVIDOR: 'Server error. Try again or tell the office.',
     err_CONFIG: 'The app is not configured correctly. Please tell the office.',
     err_SIN_ALMACEN: 'Your browser does not allow saving data (private mode?). Open the link in a normal browser window.',
+    pronto_titulo: 'Too early',
+    pronto: 'You can check in from {desde}.',
+    fueraTitulo: 'You are not at school',
+    err_FUERA_DEL_CENTRO: 'You can only check in or out at school. If you are at the door and see this, wait a few seconds and tap "Try again", or go to the office.',
+    ubicacionTitulo: 'Turn on location',
+    err_UBICACION_NECESARIA: 'Location access is needed to check in. iPhone: Settings → Privacy & Security → Location Services → on, and Safari (or Chrome) "While Using". Android: tap the padlock next to the web address → Permissions → Location → Allow. Then tap "Try again".',
   },
 };
 
@@ -354,7 +372,7 @@ async function obtenerUbicacion() {
   let permiso = 'prompt';
   try { permiso = (await navigator.permissions.query({ name: 'geolocation' })).state; } catch (e) { /* Safari antiguo */ }
   if (permiso === 'denied') return 'DESCONOCIDO';
-  const espera = permiso === 'granted' ? 2500 : 12000;
+  const espera = permiso === 'granted' ? 7000 : 15000;
   return new Promise((resolver) => {
     let hecho = false;
     const fin = (v) => { if (!hecho) { hecho = true; resolver(v); } };
@@ -367,7 +385,7 @@ async function obtenerUbicacion() {
         fin(d <= centro.radio + Math.min(precision, 100) ? 'SI' : 'NO');
       },
       () => fin('DESCONOCIDO'),
-      { enableHighAccuracy: false, timeout: espera, maximumAge: 120000 }
+      { enableHighAccuracy: false, timeout: espera, maximumAge: 60000 }
     );
   });
 }
@@ -391,14 +409,23 @@ async function fichar() {
     const r = await api('fichar', { token, puerta, ubicacion, fotoVer: alumno.fotoVer || '' });
     guardarAlumno(r.alumno);
     if (r.centro) almacen.set('centro', r.centro);
+    fichar.reintentado = false;
     mostrarResultado(r);
   } catch (e) {
     if (e.codigo === 'TOKEN_INVALIDO') {
       almacen.del('token');
       return mostrarVincular(t('tokenInvalido'));
     }
-    const reintentable = ['CONEXION', 'OCUPADO', 'ERROR_SERVIDOR'].indexOf(e.codigo) >= 0;
-    mostrarError(() => t(e.codigo === 'CONEXION' ? 'errConexionTitulo' : 'errTitulo'), () => textoError(e), reintentable ? fichar : null);
+    // Si el móvil aún no conocía las coordenadas del colegio, las guarda y lo intenta una vez más
+    if ((e.codigo === 'UBICACION_NECESARIA' || e.codigo === 'FUERA_DEL_CENTRO') && e.datos && e.datos.centro) {
+      const antes = JSON.stringify(almacen.get('centro'));
+      almacen.set('centro', e.datos.centro);
+      if (antes !== JSON.stringify(e.datos.centro) && !fichar.reintentado) { fichar.reintentado = true; return fichar(); }
+    }
+    fichar.reintentado = false;
+    const TITULOS = { CONEXION: 'errConexionTitulo', UBICACION_NECESARIA: 'ubicacionTitulo', FUERA_DEL_CENTRO: 'fueraTitulo' };
+    const reintentable = ['CONEXION', 'OCUPADO', 'ERROR_SERVIDOR', 'UBICACION_NECESARIA', 'FUERA_DEL_CENTRO'].indexOf(e.codigo) >= 0;
+    mostrarError(() => t(TITULOS[e.codigo] || 'errTitulo'), () => textoError(e), reintentable ? fichar : null);
   }
 }
 
@@ -430,6 +457,9 @@ function pintarResultado() {
   if (caducada) {
     titulo = t('caducadaTitulo');
     mensaje = t('caducadaMsg');
+  } else if (r.tipo === 'ENTRADA' && !ok) {
+    titulo = t('pronto_titulo');
+    mensaje = t('pronto', p);
   } else if (r.tipo === 'ENTRADA') {
     titulo = t('bienvenida');
     mensaje = t('entradaRegistrada');
@@ -464,7 +494,8 @@ function pintarResultado() {
   $('res-iniciales').textContent = ((al.nombre || '?').charAt(0) + (al.apellidos || '').charAt(0)).toUpperCase();
   $('res-nombre').textContent = ((al.nombre || '') + ' ' + (al.apellidos || '')).trim();
   $('res-curso').textContent = al.curso || '';
-  $('res-meta').textContent = [r.puerta && r.puerta.nombre, t(r.tipo), t('registradoA', { hora: r.horaRegistro || '' })].filter(Boolean).join(' · ');
+  const registrada = !(r.tipo === 'ENTRADA' && !ok);   // «aún es pronto» no se registra
+  $('res-meta').textContent = [r.puerta && r.puerta.nombre, t(r.tipo), registrada ? t('registradoA', { hora: r.horaRegistro || '' }) : ''].filter(Boolean).join(' · ');
   $('res-repetido').textContent = t('yaRegistrado');
   $('res-repetido').hidden = !r.repetido || caducada;
 }
