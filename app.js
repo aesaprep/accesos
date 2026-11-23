@@ -4,7 +4,7 @@
    ⚙️  API_URL = the link of the «Students API» deployment (ends in /exec).
    ===================================================================== */
 const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbzHHJPI6Nz0TV7zUZfQEDp41H-MROvDnY-wiOzK3O49EucSZhEeW2q_gfGISjb3fyC79A/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbwJQVUGjDsY0sSIRcCFeDTii1KXpW2wsLMZAEnCMqdi9nr3WsFGIF2ZWKdZGSrZk3Nt/exec',
   SEGUNDOS_VALIDEZ_PANTALLA: 120,   // pasado este tiempo la pantalla verde/roja se pone gris
   ZONA_HORARIA: 'Europe/Madrid',
 };
