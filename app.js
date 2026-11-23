@@ -1,11 +1,7 @@
 /* =====================================================================
    AESA Prep Academy · Control de entradas y salidas — app del alumno
    ---------------------------------------------------------------------
-   ⚙️  ÚNICO CAMBIO OBLIGATORIO: pega en API_URL la URL de la API
-       (la que termina en /exec, de Implementar → Gestionar implementaciones).
-       Mientras valga 'PRUEBA', la web funciona en MODO PRUEBA: sin Google,
-       con alumnos ficticios (archivo modo-prueba.js). Sirve para probar
-       los QR y las pegatinas NFC antes de montar todo lo demás.
+   ⚙️  API_URL = the link of the «Students API» deployment (ends in /exec).
    ===================================================================== */
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzHHJPI6Nz0TV7zUZfQEDp41H-MROvDnY-wiOzK3O49EucSZhEeW2q_gfGISjb3fyC79A/exec',
@@ -237,15 +233,41 @@ class ErrorApp extends Error {
   constructor(codigo, datos) { super(codigo); this.codigo = codigo; this.datos = datos || {}; }
 }
 
-/* ---------- Almacenamiento local (token, datos del alumno, idioma) ---------- */
+/* ---------- Almacenamiento local (token, datos del alumno, idioma) ----------
+   The phone stays linked: the token is kept in localStorage AND, as a backup, in a
+   long-lived cookie of this site. If the browser clears one of them, the other restores it,
+   so the student does not have to type their email again. */
+const COPIA_EN_COOKIE = ['token', 'email'];
+const cookie = {
+  get(k) { const m = document.cookie.match(new RegExp('(?:^|; )aesa_' + k + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : null; },
+  set(k, v) { try { document.cookie = 'aesa_' + k + '=' + encodeURIComponent(v) + '; Max-Age=34560000; Path=/; Secure; SameSite=Lax'; } catch (e) { /* nada */ } },
+  del(k) { try { document.cookie = 'aesa_' + k + '=; Max-Age=0; Path=/; Secure; SameSite=Lax'; } catch (e) { /* nada */ } },
+};
 const almacen = {
   disponible: (() => {
     try { localStorage.setItem('aesa.prueba', '1'); localStorage.removeItem('aesa.prueba'); return true; } catch (e) { return false; }
   })(),
-  get(k) { try { const v = localStorage.getItem('aesa.' + k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
-  set(k, v) { try { localStorage.setItem('aesa.' + k, JSON.stringify(v)); } catch (e) { /* lleno o bloqueado */ } },
-  del(k) { try { localStorage.removeItem('aesa.' + k); } catch (e) { /* nada */ } },
+  get(k) {
+    let v = null;
+    try { v = localStorage.getItem('aesa.' + k); } catch (e) { v = null; }
+    if (!v && COPIA_EN_COOKIE.indexOf(k) >= 0) {
+      v = cookie.get(k);
+      if (v) { try { localStorage.setItem('aesa.' + k, v); } catch (e) { /* nada */ } }
+    }
+    try { return v ? JSON.parse(v) : null; } catch (e) { return null; }
+  },
+  set(k, v) {
+    const s = JSON.stringify(v);
+    try { localStorage.setItem('aesa.' + k, s); } catch (e) { /* lleno o bloqueado */ }
+    if (COPIA_EN_COOKIE.indexOf(k) >= 0) cookie.set(k, s);
+  },
+  del(k) {
+    try { localStorage.removeItem('aesa.' + k); } catch (e) { /* nada */ }
+    if (COPIA_EN_COOKIE.indexOf(k) >= 0) cookie.del(k);
+  },
 };
+// Asks the browser to keep this site's data (not delete it when space is short)
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) { /* nada */ }
 
 /* ---------- Estado ---------- */
 const params = new URLSearchParams(location.search);
@@ -320,28 +342,7 @@ function textoError(e) {
 }
 
 /* ---------- Llamada a la API (POST text/plain: sin preflight CORS) ---------- */
-const MODO_PRUEBA = CONFIG.API_URL === 'PRUEBA';
-let cargaModoPrueba = null;
-function cargarModoPrueba() {
-  if (!cargaModoPrueba) {
-    cargaModoPrueba = new Promise((ok, ko) => {
-      const s = document.createElement('script');
-      s.src = 'modo-prueba.js';
-      s.onload = ok;
-      s.onerror = () => { cargaModoPrueba = null; ko(new ErrorApp('CONFIG')); };
-      document.head.appendChild(s);
-    });
-  }
-  return cargaModoPrueba;
-}
-
 async function api(accion, datos) {
-  if (MODO_PRUEBA) {
-    await cargarModoPrueba();
-    const r = await window.APIPrueba(accion, datos);
-    if (!r.ok) throw new ErrorApp(r.codigo, r.datos);
-    return r;
-  }
   const ctrl = new AbortController();
   const limite = setTimeout(() => ctrl.abort(), 20000);
   let resp;
@@ -624,8 +625,7 @@ function iniciar() {
 
   aplicarIdioma();
 
-  if (MODO_PRUEBA) cargarModoPrueba().catch(() => {});
-  if (!MODO_PRUEBA && (!CONFIG.API_URL || CONFIG.API_URL.indexOf('https://') !== 0)) {
+  if (!CONFIG.API_URL || CONFIG.API_URL.indexOf('https://') !== 0) {
     return mostrarError(() => t('errTitulo'), () => t('err_CONFIG'), null);
   }
   if (!almacen.disponible) {
